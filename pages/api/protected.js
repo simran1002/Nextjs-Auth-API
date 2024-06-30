@@ -1,7 +1,8 @@
-import { authenticateToken } from '../../lib/auth';
+// pages/api/protected.js
+import verifyToken from '../../middleware/auth';
 
-export default function handler(req, res) {
-  authenticateToken(req, res, () => {
-    res.status(200).json({ message: 'This is a protected route' });
-  });
-}
+const handler = (req, res) => {
+  res.status(200).json({ message: 'This is a protected route', user: req.user });
+};
+
+export default verifyToken(handler);

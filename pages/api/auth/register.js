@@ -1,28 +1,30 @@
-import connectToDatabase from '../../../lib/mongodb';
+// pages/api/auth/register.js
+import connectDB from '../../../middleware/mongodb';
 import User from '../../../models/User';
 import bcrypt from 'bcryptjs';
 
-export default async function handler(req, res) {
+const handler = async (req, res) => {
   if (req.method === 'POST') {
-    await connectToDatabase();
     const { username, email, password } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     try {
-      const user = new User({
-        username,
-        email,
-        password: hashedPassword,
-      });
+      const existingUser = await User.findOne({ email });
 
+      if (existingUser) {
+        return res.status(400).json({ error: 'User already exists' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = new User({ username, email, password: hashedPassword });
       await user.save();
 
-      res.status(201).json({ message: 'User created' });
+      return res.status(201).json({ message: 'User created successfully' });
     } catch (error) {
-      res.status(400).json({ error: 'User already exists' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
-}
+};
+
+export default connectDB(handler);
